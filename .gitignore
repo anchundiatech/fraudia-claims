@@ -1,0 +1,49 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+env/
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+
+# Env
+.env
+*.env.local
+!.env.example
+!.env.local.example
+
+# Next.js
+frontend/.next/
+frontend/node_modules/
+frontend/out/
+
+# Data (no subir datos reales)
+data/raw/*
+data/processed/*
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+
+# IDEs
+.idea/
+.vscode/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Notebooks checkpoints
+.ipynb_checkpoints/
+
+
+# Python
+venv/
+.venv/
+env/
+
+app/venv/
+src/venv/

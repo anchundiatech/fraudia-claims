@@ -1,0 +1,13 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-verde:    #16a34a;
+  --color-amarillo: #d97706;
+  --color-rojo:     #dc2626;
+}
+
+body {
+  @apply bg-gray-50 text-gray-900;
+}
