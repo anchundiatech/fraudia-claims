@@ -33,7 +33,7 @@ _cors_origins = [
     o.strip()
     for o in os.getenv(
         "CORS_ORIGINS",
-        "http://localhost:3000,http://127.0.0.1:3000, https://fraudia-claims.vercel.app/",
+        "http://localhost:3000,http://127.0.0.1:3000,https://fraudia-claims.vercel.app",
     ).split(",")
     if o.strip()
 ]
@@ -41,13 +41,24 @@ _frontend = os.getenv("FRONTEND_URL", "http://localhost:3000").strip()
 if _frontend and _frontend not in _cors_origins:
     _cors_origins.append(_frontend)
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=_cors_origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# Para producción (Render / Vercel), es mejor permitir todos los orígenes (*) sin credenciales
+# para evitar bloqueos por dominios de previsualización de Vercel.
+if os.getenv("APP_ENV", "development").lower() != "development" or "*" in _cors_origins:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_credentials=False,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+else:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=_cors_origins,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
 _df_cache: Optional[pd.DataFrame] = None
 
