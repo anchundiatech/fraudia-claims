@@ -1,7 +1,7 @@
 import os
 import json
 from openai import OpenAI
-from .tools import ejecutar_tool, OPENAI_TOOLS, TOOLS_DEFINICION
+from .tools import ejecutar_tool, OPENAI_TOOLS, TOOLS_DEFINICION, ANTHROPIC_TOOLS
 from .prompts import SYSTEM_PROMPT
 
 class AgenteFraude:
@@ -18,11 +18,18 @@ class AgenteFraude:
         self.gemini_api_key = os.getenv("GEMINI_API_KEY")
         self.gemini_model = "gemini-1.5-flash"
 
+        # Anthropic Config
+        self.anthropic_api_key = os.getenv("ANTHROPIC_API_KEY")
+        self.anthropic_model = os.getenv("ANTHROPIC_MODEL", "claude-3-5-sonnet-20241022")
+
     def consultar(self, pregunta: str) -> str:
         if self.provider == "xai":
             return self._consultar_xai(pregunta)
+        elif self.provider == "anthropic":
+            return self._consultar_anthropic(pregunta)
         else:
             return self._consultar_gemini(pregunta)
+
 
     def _consultar_xai(self, pregunta: str) -> str:
         if not self.xai_api_key:
@@ -77,6 +84,63 @@ class AgenteFraude:
 
         except Exception as e:
             return f"Error en el agente xAI: {str(e)}"
+
+    def _consultar_anthropic(self, pregunta: str) -> str:
+        if not self.anthropic_api_key:
+            return "Falta configurar ANTHROPIC_API_KEY en el archivo .env"
+
+        import anthropic
+        client = anthropic.Anthropic(api_key=self.anthropic_api_key)
+        
+        mensajes = [{"role": "user", "content": pregunta}]
+
+        try:
+            response = client.messages.create(
+                model=self.anthropic_model,
+                max_tokens=1024,
+                system=self.system_prompt,
+                messages=mensajes,
+                tools=ANTHROPIC_TOOLS,
+                temperature=0.1
+            )
+
+            if response.stop_reason == "tool_use":
+                # Agregar respuesta del asistente a la lista de mensajes
+                mensajes.append({"role": "assistant", "content": response.content})
+                
+                tool_results = []
+                for content_block in response.content:
+                    if content_block.type == "tool_use":
+                        tool_use_id = content_block.id
+                        tool_name = content_block.name
+                        tool_input = content_block.input
+                        
+                        resultado_db = ejecutar_tool(tool_name, tool_input)
+                        
+                        tool_results.append({
+                            "type": "tool_result",
+                            "tool_use_id": tool_use_id,
+                            "content": resultado_db
+                        })
+                
+                mensajes.append({"role": "user", "content": tool_results})
+
+                segunda_respuesta = client.messages.create(
+                    model=self.anthropic_model,
+                    max_tokens=1024,
+                    system=self.system_prompt,
+                    messages=mensajes,
+                    temperature=0.1
+                )
+                return segunda_respuesta.content[0].text
+
+            # En caso de que no use tools
+            if response.content:
+                return response.content[0].text
+            return "No se recibió respuesta de Anthropic"
+
+        except Exception as e:
+            return f"Error en el agente Anthropic: {str(e)}"
 
     def _consultar_gemini(self, pregunta: str) -> str:
         if not self.gemini_api_key:
