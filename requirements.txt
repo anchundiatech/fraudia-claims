@@ -16,6 +16,8 @@ sentence-transformers==2.7.0
 
 # IA Agent
 openai==1.70.0
+anthropic
+
 
 # Base de datos (opcional, para persistencia)
 sqlalchemy==2.0.30
