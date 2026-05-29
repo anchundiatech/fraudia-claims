@@ -7,6 +7,7 @@
 ![Claude](https://img.shields.io/badge/agent-Claude%203.5-orange?style=flat-square)
 
 **Prototipo desarrollado para el hackIAthon 2026 — Reto Aseguradora del Sur**
+### 🚀 Equipo *Superpoderosos* · Hackiathon 2026
 
 Sistema inteligente que combina **motor de reglas de negocio** + **Inteligencia Artificial** para detectar y priorizar posibles fraudes en siniestros de seguros.
 
