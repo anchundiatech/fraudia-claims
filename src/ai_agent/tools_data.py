@@ -344,3 +344,263 @@ def senales_proveedor_df(pp: Optional[pd.DataFrame] = None) -> pd.DataFrame:
         r"proveedor|beneficiario|restrictiva|s07|s-07", regex=True, na=False
     )
     return pp[mask]
+
+
+# ─────────────────────────────────────────────────────────
+# HERRAMIENTAS EXPLICATIVAS PARA EL AGENTE DE IA (Q18 - Q29)
+# ─────────────────────────────────────────────────────────
+
+def obtener_top_riesgo(n: int = 10) -> str:
+    df = cargar_df()
+    if df is None or df.empty:
+        return "No hay datos de siniestros disponibles."
+    top = df.sort_values("score", ascending=False).head(n)
+    md = "| Siniestro ID | Asegurado | Ramo | Sucursal | Score | Nivel |\n"
+    md += "|---|---|---|---|---|---|\n"
+    for _, r in top.iterrows():
+        md += f"| {r.get('id_siniestro')} | {r.get('_asegurado_nombre_completo')} | {r.get('ramo')} | {r.get('sucursal')} | {r.get('score')} | {r.get('nivel_riesgo')} |\n"
+    return md
+
+
+def detalle_siniestro(id_siniestro: str) -> str:
+    df = cargar_df()
+    if df is None or df.empty:
+        return "No hay datos de siniestros disponibles."
+    row = buscar_siniestro(df, id_siniestro)
+    if row is None:
+        return f"No se encontró el siniestro con ID {id_siniestro}."
+    
+    md = f"### Detalle del Siniestro: {id_siniestro}\n"
+    md += f"- **Asegurado**: {row.get('_asegurado_nombre_completo')}\n"
+    md += f"- **Ramo**: {row.get('ramo')}\n"
+    md += f"- **Cobertura**: {row.get('cobertura', 'N/A')}\n"
+    md += f"- **Sucursal**: {row.get('sucursal')}\n"
+    md += f"- **Monto Reclamado**: ${row.get('monto_reclamado'):,.2f}\n"
+    md += f"- **Score de Riesgo**: {row.get('score')}/100\n"
+    md += f"- **Nivel de Riesgo**: {row.get('nivel_riesgo')}\n"
+    md += f"- **Acción Sugerida**: {row.get('accion_sugerida', 'N/A')}\n"
+    md += f"- **Resumen**: {row.get('resumen_ia', 'N/A')}\n"
+    return md
+
+
+def score_proveedor(proveedor_nombre: str) -> str:
+    df = cargar_df()
+    if df is None or df.empty:
+        return "No hay datos de siniestros disponibles."
+    prov = df[df["beneficiario"].astype(str).str.lower().str.contains(proveedor_nombre.lower(), na=False)]
+    if prov.empty:
+        return f"No se encontraron casos registrados para el proveedor '{proveedor_nombre}'."
+    
+    md = f"### Historial de Casos para Proveedor: {proveedor_nombre}\n"
+    md += "| Siniestro ID | Ramo | Monto | Score | Nivel |\n"
+    md += "|---|---|---|---|---|\n"
+    for _, r in prov.iterrows():
+        md += f"| {r.get('id_siniestro')} | {r.get('ramo')} | ${r.get('monto_reclamado'):,.2f} | {r.get('score')} | {r.get('nivel_riesgo')} |\n"
+    return md
+
+
+def ramos_sospechosos() -> str:
+    df = cargar_df()
+    if df is None or df.empty:
+        return "No hay datos de siniestros disponibles."
+    
+    gr = df.groupby("ramo").apply(lambda x: pd.Series({
+        "total_casos": len(x),
+        "sospechosos": int(x["nivel_riesgo"].isin(["AMARILLO", "ROJO"]).sum()),
+        "total_monto": x["monto_reclamado"].sum()
+    }), include_groups=False).reset_index()
+    
+    gr["pct_sospechosos"] = (gr["sospechosos"] / gr["total_casos"]) * 100
+    gr = gr.sort_values("pct_sospechosos", ascending=False)
+    
+    md = "### Análisis de Riesgo por Ramo de Negocio\n"
+    md += "| Ramo | Total Casos | Casos Sospechosos | % Sospechosos | Monto Total |\n"
+    md += "|---|---|---|---|---|\n"
+    for _, r in gr.iterrows():
+        md += f"| {r['ramo']} | {int(r['total_casos'])} | {int(r['sospechosos'])} | {r['pct_sospechosos']:.1f}% | ${r['total_monto']:,.2f} |\n"
+    return md
+
+
+def proveedores_alertas() -> str:
+    df = cargar_df()
+    if df is None or df.empty:
+        return "No hay datos de siniestros disponibles."
+    
+    filtrado = df[df["beneficiario"].astype(str).str.strip().str.upper() != "N/A"]
+    if filtrado.empty:
+        return "No hay proveedores registrados con alertas."
+        
+    gr = filtrado.groupby("beneficiario").apply(lambda x: pd.Series({
+        "total_casos": len(x),
+        "alertas": int(x["num_alertas"].sum()),
+        "total_score": float(x["score"].sum()),
+        "monto_total": x["monto_reclamado"].sum()
+    }), include_groups=False).reset_index()
+    
+    gr = gr.sort_values("total_score", ascending=False).head(10)
+    
+    md = "### Top 10 Talleres/Proveedores con Mayor Severidad de Alertas\n"
+    md += "| Proveedor | Cantidad Siniestros | Alertas Detonadas | Score Acumulado | Monto Reclamado |\n"
+    md += "|---|---|---|---|---|\n"
+    for _, r in gr.iterrows():
+        md += f"| {r['beneficiario']} | {int(r['total_casos'])} | {int(r['alertas'])} | {r['total_score']:.0f} | ${r['monto_total']:,.2f} |\n"
+    return md
+
+
+def ciudades_riesgo() -> str:
+    df = cargar_df()
+    if df is None or df.empty:
+        return "No hay datos de siniestros disponibles."
+    
+    gr = df.groupby("sucursal").apply(lambda x: pd.Series({
+        "total_casos": len(x),
+        "alertas": int(x["num_alertas"].sum()),
+        "total_score": float(x["score"].sum()),
+        "monto_total": x["monto_reclamado"].sum()
+    }), include_groups=False).reset_index()
+    
+    gr = gr.sort_values("total_score", ascending=False)
+    
+    md = "### Concentración de Riesgo por Ciudad / Sucursal\n"
+    md += "| Ciudad | Cantidad Siniestros | Alertas Detonadas | Score Acumulado | Monto Reclamado |\n"
+    md += "|---|---|---|---|---|\n"
+    for _, r in gr.iterrows():
+        md += f"| {r['sucursal']} | {int(r['total_casos'])} | {int(r['alertas'])} | {r['total_score']:.0f} | ${r['monto_total']:,.2f} |\n"
+    return md
+
+
+def recomendar_acciones() -> str:
+    df = cargar_df()
+    if df is None or df.empty:
+        return "No hay datos de siniestros disponibles."
+    
+    criticos = df[df["nivel_riesgo"] == "ROJO"].sort_values("score", ascending=False).head(10)
+    if criticos.empty:
+        return "No se registran siniestros de nivel Crítico (Rojo) actualmente."
+        
+    md = "### Casos Recomendados para Revisión Inmediata (Prioridad Alta)\n"
+    md += "| Siniestro ID | Asegurado | Ramo | Score | Acción Recomendada |\n"
+    md += "|---|---|---|---|---|\n"
+    for _, r in criticos.iterrows():
+        md += f"| {r.get('id_siniestro')} | {r.get('_asegurado_nombre_completo')} | {r.get('ramo')} | {r.get('score')} | {r.get('accion_sugerida', 'Inspección de campo prioritaria')} |\n"
+    return md
+
+
+def asegurados_frecuencia_reclamos() -> str:
+    df = cargar_df()
+    if df is None or df.empty:
+        return "No hay datos de siniestros disponibles."
+    
+    gr = df.groupby("_asegurado_nombre_completo").apply(lambda x: pd.Series({
+        "total_casos": len(x),
+        "alertas": int(x["num_alertas"].sum()),
+        "total_score": float(x["score"].sum()),
+        "monto_total": x["monto_reclamado"].sum()
+    }), include_groups=False).reset_index()
+    
+    gr = gr.sort_values(["total_casos", "total_score"], ascending=[False, False]).head(10)
+    
+    md = "### Asegurados con Mayor Frecuencia de Siniestros\n"
+    md += "| Asegurado | Cantidad Siniestros | Alertas Detonadas | Score Acumulado | Monto Total |\n"
+    md += "|---|---|---|---|---|\n"
+    for _, r in gr.iterrows():
+        md += f"| {r['_asegurado_nombre_completo']} | {int(r['total_casos'])} | {int(r['alertas'])} | {r['total_score']:.0f} | ${r['monto_total']:,.2f} |\n"
+    return md
+
+
+def casos_documentos_incompletos() -> str:
+    df = cargar_df()
+    if df is None or df.empty:
+        return "No hay datos de siniestros disponibles."
+    
+    incompletos = df[(~df["_docs_completos"]) & (df["nivel_riesgo"].isin(["AMARILLO", "ROJO"]))].sort_values("score", ascending=False).head(10)
+    if incompletos.empty:
+        return "No se registran casos críticos con documentación incompleta."
+        
+    md = "### Casos Críticos con Documentación Pendiente o Rechazada\n"
+    md += "| Siniestro ID | Asegurado | Ramo | Score | Nivel |\n"
+    md += "|---|---|---|---|---|\n"
+    for _, r in incompletos.iterrows():
+        md += f"| {r.get('id_siniestro')} | {r.get('_asegurado_nombre_completo')} | {r.get('ramo')} | {r.get('score')} | {r.get('nivel_riesgo')} |\n"
+    return md
+
+
+def casos_montos_atipicos() -> str:
+    df = cargar_df()
+    if df is None or df.empty:
+        return "No hay datos de siniestros disponibles."
+    
+    mean = df["monto_reclamado"].mean()
+    std = df["monto_reclamado"].std()
+    atipicos = df[df["monto_reclamado"] > (mean + 2 * std)].sort_values("monto_reclamado", ascending=False)
+    if atipicos.empty:
+        return "No se registran casos con montos reclamados estadísticamente atípicos."
+        
+    md = "### Siniestros con Montos Reclamados Atípicos (+2 Desviaciones Estándar)\n"
+    md += f"*Media general de reclamos: ${mean:,.2f} — Desviación estándar: ${std:,.2f}*\n\n"
+    md += "| Siniestro ID | Asegurado | Ramo | Monto Reclamado | Score | Nivel |\n"
+    md += "|---|---|---|---|---|---|\n"
+    for _, r in atipicos.iterrows():
+        md += f"| {r.get('id_siniestro')} | {r.get('_asegurado_nombre_completo')} | {r.get('ramo')} | ${r.get('monto_reclamado'):,.2f} | {r.get('score')} | {r.get('nivel_riesgo')} |\n"
+    return md
+
+
+def siniestros_cerca_inicio_poliza() -> str:
+    df = cargar_df()
+    if df is None or df.empty:
+        return "No hay datos de siniestros disponibles."
+    
+    cercanos = df[df["_dias_inicio_poliza"] <= 30].sort_values("_dias_inicio_poliza", ascending=True)
+    if cercanos.empty:
+        return "No se registran siniestros ocurridos en los primeros 30 días de vigencia de póliza."
+        
+    md = "### Siniestros Ocurridos Cerca de la Fecha de Inicio de Póliza (≤30 días)\n"
+    md += "| Siniestro ID | Asegurado | Ramo | Días desde Inicio | Score | Nivel |\n"
+    md += "|---|---|---|---|---|---|\n"
+    for _, r in cercanos.iterrows():
+        md += f"| {r.get('id_siniestro')} | {r.get('_asegurado_nombre_completo')} | {r.get('ramo')} | {int(r.get('_dias_inicio_poliza'))} días | {r.get('score')} | {r.get('nivel_riesgo')} |\n"
+    return md
+
+
+def resumen_casos_criticos() -> str:
+    df = cargar_df()
+    if df is None or df.empty:
+        return "No hay datos de siniestros disponibles."
+    
+    total = len(df)
+    rojos = len(df[df["nivel_riesgo"] == "ROJO"])
+    amarillos = len(df[df["nivel_riesgo"] == "AMARILLO"])
+    verdes = len(df[df["nivel_riesgo"] == "VERDE"])
+    
+    monto_total = df["monto_reclamado"].sum()
+    monto_criticos = df[df["nivel_riesgo"] == "ROJO"]["monto_reclamado"].sum()
+    
+    md = "### Resumen Ejecutivo de Auditoría de Riesgos\n"
+    md += f"- **Total Siniestros Evaluados**: {total}\n"
+    md += f"- **Siniestros en Riesgo Crítico (Rojo) 🔴**: {rojos} ({rojos/total*100:.1f}%)\n"
+    md += f"- **Siniestros en Riesgo Medio (Amarillo) 🟡**: {amarillos} ({amarillos/total*100:.1f}%)\n"
+    md += f"- **Siniestros en Riesgo Bajo (Verde) 🟢**: {verdes} ({verdes/total*100:.1f}%)\n"
+    md += f"- **Monto Total Reclamado**: ${monto_total:,.2f}\n"
+    md += f"- **Monto Total en Riesgo Crítico**: ${monto_criticos:,.2f} ({monto_criticos/monto_total*100:.1f}% del total)\n"
+    return md
+
+
+def patrones_sospechosos() -> str:
+    df = cargar_df()
+    if df is None or df.empty:
+        return "No hay datos de siniestros disponibles."
+        
+    sospechosos = df[df["nivel_riesgo"].isin(["AMARILLO", "ROJO"])]
+    if sospechosos.empty:
+        return "No hay suficientes casos sospechosos para identificar patrones."
+        
+    gr = sospechosos.groupby(["ramo", "beneficiario"]).size().reset_index(name="cantidad_siniestros")
+    gr = gr[gr["beneficiario"].astype(str).str.strip().str.upper() != "N/A"]
+    gr = gr.sort_values("cantidad_siniestros", ascending=False).head(10)
+    
+    md = "### Patrones Recurrentes de Reclamos Sospechosos (Ramo + Proveedor)\n"
+    md += "| Ramo | Proveedor / Taller | Cantidad Casos Sospechosos |\n"
+    md += "|---|---|---|\n"
+    for _, r in gr.iterrows():
+        md += f"| {r['ramo']} | {r['beneficiario']} | {r['cantidad_siniestros']} |\n"
+    return md

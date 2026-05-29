@@ -569,7 +569,7 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-[#f4f6fa] flex flex-col font-sans antialiased text-[#1c2434]">
-      
+
       {/* HEADER EXACT TO SCREENSHOT */}
       <header className="bg-white border-b border-gray-200/80 px-6 py-3.5 flex items-center justify-between sticky top-0 z-30 shadow-sm">
         <div className="flex items-center gap-3.5">
@@ -589,7 +589,7 @@ export default function Dashboard() {
           <button className="bg-white border border-gray-200 text-gray-500 hover:text-gray-800 p-2 rounded-xl shadow-sm hover:bg-gray-50 transition-all">
             <HelpCircle size={18} />
           </button>
-          
+
           <div className="flex items-center gap-3 bg-white border border-gray-100 rounded-2xl px-4 py-1.5 shadow-sm">
             <div className="bg-[#3b59ca] text-white rounded-full w-9 h-9 flex items-center justify-center font-bold text-xs tracking-wider">
               CM
@@ -603,7 +603,7 @@ export default function Dashboard() {
       </header>
 
       <div className="flex flex-1 max-w-full">
-        
+
         {/* SIDEBAR EXACT TO SCREENSHOT */}
         <aside className="w-72 p-5 flex flex-col shrink-0 sticky top-[73px] h-[calc(100vh-73px)] overflow-y-auto">
           <div className="bg-white rounded-2xl border border-gray-200/80 p-4 shadow-sm flex-1 flex flex-col justify-between">
@@ -710,7 +710,7 @@ export default function Dashboard() {
 
         {/* MAIN PANEL BASED ON CHOSEN SIDEBAR TAB */}
         <main className="flex-1 p-5 overflow-x-hidden">
-          
+
           {/* TAB: PÓLIZA (Próximamente as in screenshot) */}
           {activeTab === "poliza" && (
             <div className="bg-white rounded-2xl border border-gray-200 p-12 text-center shadow-sm flex flex-col items-center justify-center h-80">
@@ -826,7 +826,7 @@ export default function Dashboard() {
             </div>
           )}
 
-          {/* TAB: AGENTE LUCHO (Full Screen Chat) */}
+          {/* TAB: AGENTE Audit (Full Screen Chat) */}
           {activeTab === "agent" && (
             <div className="space-y-4 max-w-4xl mx-auto animate-fade-in">
               <div>
@@ -840,7 +840,7 @@ export default function Dashboard() {
           {/* TAB: SINIESTRO (The main Claims dashboard fully updated) */}
           {activeTab === "siniestro" && (
             <div className="space-y-6 animate-fade-in">
-              
+
               {/* TOP ACTIONS */}
               <div className="flex items-center justify-between flex-wrap gap-4 border-b border-gray-200/50 pb-4">
                 <div>
