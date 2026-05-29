@@ -167,12 +167,16 @@ def chat_status():
     try:
         from ai_agent.agent import AgenteFraude
         agente = AgenteFraude()
-        # Forzamos una consulta rápida para validar el modelo
+        modelo = "gemini-1.5-flash"
+        if agente.provider == "xai":
+            modelo = agente.xai_model
+        elif agente.provider == "anthropic":
+            modelo = agente.anthropic_model
         return {
             "status": "ok", 
-            "modelo": "gemini-1.5-flash", 
+            "modelo": modelo, 
             "proveedor": agente.provider,
-            "mensaje": "Modelo forzado a 1.5-flash para estabilidad"
+            "mensaje": f"Agente activo con proveedor {agente.provider}"
         }
     except Exception as e:
         return {"status": "error", "detail": str(e)}
@@ -188,7 +192,7 @@ async def chat_agente(req: ChatRequest):
     except ValueError as e:
         raise HTTPException(status_code=503, detail=str(e))
     except Exception as e:
-        raise HTTPException(status_code=502, detail=f"Error Gemini: {str(e)}")
+        raise HTTPException(status_code=502, detail=f"Error del Agente: {str(e)}")
 
 
 @app.get("/agent/tools")
