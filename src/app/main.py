@@ -21,7 +21,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from database.supabase import probar_conexion, obtener_rangos_score
 from database.scoring import PUNTAJE_MAX
 from ai_agent.tools_data import cargar_df, invalidar_cache
-from serializers import serializar_siniestro
+from .serializers import serializar_siniestro
 
 app = FastAPI(
     title="Fraudia Claims API",
@@ -173,8 +173,8 @@ def chat_status():
         elif agente.provider == "anthropic":
             modelo = agente.anthropic_model
         return {
-            "status": "ok", 
-            "modelo": modelo, 
+            "status": "ok",
+            "modelo": modelo,
             "proveedor": agente.provider,
             "mensaje": f"Agente activo con proveedor {agente.provider}"
         }
