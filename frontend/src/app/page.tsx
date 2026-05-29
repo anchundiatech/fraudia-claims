@@ -399,34 +399,6 @@ function ChatAgente({ fullScreen = false }: { fullScreen?: boolean }) {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // States for dynamic provider & model selection
-  const [provider, setProvider] = useState("xai");
-  const [model, setModel] = useState("grok-beta");
-  const [updatingConfig, setUpdatingConfig] = useState(false);
-
-  useEffect(() => {
-    import("@/lib/api").then(({ getAgentStatus }) => {
-      getAgentStatus().then((cfg) => {
-        setProvider(cfg.provider || cfg.proveedor || "xai");
-        setModel(cfg.model || cfg.modelo || "grok-beta");
-      }).catch(() => {});
-    });
-  }, []);
-
-  const handleConfigChange = async (newProvider: string, newModel: string) => {
-    setUpdatingConfig(true);
-    try {
-      const { updateAgentConfig } = await import("@/lib/api");
-      const cfg = await updateAgentConfig(newProvider, newModel);
-      setProvider(cfg.provider);
-      setModel(cfg.model);
-    } catch {
-      alert("No se pudo actualizar la configuración del agente de IA en el servidor.");
-    } finally {
-      setUpdatingConfig(false);
-    }
-  };
-
   const send = async () => {
     if (!input.trim()) return;
     const pregunta = input.trim();
@@ -456,64 +428,6 @@ function ChatAgente({ fullScreen = false }: { fullScreen?: boolean }) {
         <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-green-50 text-green-700 border border-green-200/50">
           <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" /> Activo
         </span>
-      </div>
-
-      {/* Selector de servicio y modelo de IA */}
-      <div className="px-5 py-3 border-b border-slate-100 bg-slate-50/20 flex gap-4 items-center flex-wrap justify-between">
-        <div className="flex gap-4 items-center flex-wrap">
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Servicio:</span>
-            <select
-              value={provider}
-              onChange={(e) => {
-                const p = e.target.value;
-                const defaultM = p === "xai" ? "grok-beta" : p === "gemini" ? "gemini-1.5-flash" : "claude-3-5-sonnet-20241022";
-                handleConfigChange(p, defaultM);
-              }}
-              disabled={updatingConfig}
-              className="text-xs font-bold bg-white border border-slate-200 rounded-xl px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-[#4f46e5] text-slate-800 shadow-2xs"
-            >
-              <option value="xai">xAI (Grok)</option>
-              <option value="gemini">Google (Gemini)</option>
-              <option value="anthropic">Anthropic (Claude)</option>
-            </select>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Modelo:</span>
-            <select
-              value={model}
-              onChange={(e) => handleConfigChange(provider, e.target.value)}
-              disabled={updatingConfig}
-              className="text-xs font-bold bg-white border border-slate-200 rounded-xl px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-[#4f46e5] text-slate-800 shadow-2xs"
-            >
-              {provider === "xai" && (
-                <>
-                  <option value="grok-beta">grok-beta</option>
-                  <option value="grok-2-latest">grok-2-latest</option>
-                </>
-              )}
-              {provider === "gemini" && (
-                <>
-                  <option value="gemini-1.5-flash">gemini-1.5-flash</option>
-                  <option value="gemini-1.5-pro">gemini-1.5-pro</option>
-                </>
-              )}
-              {provider === "anthropic" && (
-                <>
-                  <option value="claude-3-5-sonnet-20241022">claude-3.5-sonnet</option>
-                  <option value="claude-3-5-haiku-20241022">claude-3.5-haiku</option>
-                </>
-              )}
-            </select>
-          </div>
-        </div>
-
-        {updatingConfig && (
-          <span className="text-[10px] font-bold text-[#4f46e5] animate-pulse">
-            Sincronizando...
-          </span>
-        )}
       </div>
 
       <div className="flex-1 overflow-y-auto p-5 space-y-4 text-sm scrollbar-thin">
