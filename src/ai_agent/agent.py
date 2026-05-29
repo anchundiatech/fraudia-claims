@@ -6,7 +6,7 @@ from .prompts import SYSTEM_PROMPT
 
 class AgenteFraude:
     def __init__(self):
-        self.provider = os.getenv("AI_PROVIDER", "gemini").lower()
+        self.provider = os.getenv("AI_PROVIDER", "xai").lower()
         self.system_prompt = SYSTEM_PROMPT
 
         # xAI Config
@@ -36,7 +36,7 @@ class AgenteFraude:
             return "Falta configurar XAI_API_KEY en el archivo .env"
 
         client = OpenAI(api_key=self.xai_api_key, base_url=self.xai_base_url)
-        
+
         mensajes = [
             {"role": "system", "content": self.system_prompt},
             {"role": "user", "content": pregunta}
@@ -61,10 +61,10 @@ class AgenteFraude:
                 for tool_call in tool_calls:
                     nombre_func = tool_call.function.name
                     args = json.loads(tool_call.function.arguments)
-                    
+
                     # EJECUCIÓN EN LA DB REAL (vPoliza_Puntaje_Total)
                     resultado_db = ejecutar_tool(nombre_func, args)
-                    
+
                     mensajes.append({
                         "tool_call_id": tool_call.id,
                         "role": "tool",
@@ -91,7 +91,7 @@ class AgenteFraude:
 
         import anthropic
         client = anthropic.Anthropic(api_key=self.anthropic_api_key)
-        
+
         mensajes = [{"role": "user", "content": pregunta}]
 
         try:
@@ -107,22 +107,22 @@ class AgenteFraude:
             if response.stop_reason == "tool_use":
                 # Agregar respuesta del asistente a la lista de mensajes
                 mensajes.append({"role": "assistant", "content": response.content})
-                
+
                 tool_results = []
                 for content_block in response.content:
                     if content_block.type == "tool_use":
                         tool_use_id = content_block.id
                         tool_name = content_block.name
                         tool_input = content_block.input
-                        
+
                         resultado_db = ejecutar_tool(tool_name, tool_input)
-                        
+
                         tool_results.append({
                             "type": "tool_result",
                             "tool_use_id": tool_use_id,
                             "content": resultado_db
                         })
-                
+
                 mensajes.append({"role": "user", "content": tool_results})
 
                 segunda_respuesta = client.messages.create(
@@ -161,7 +161,7 @@ class AgenteFraude:
         }
 
         chat = client.chats.create(model=self.gemini_model, config=config)
-        
+
         try:
             response = chat.send_message(pregunta)
             for _ in range(8):
