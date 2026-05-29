@@ -1,0 +1,6 @@
+[project]
+name = "fraudia-claims"
+version = "0.1.0"
+
+[tool.vercel]
+entrypoint = "src.app.main:app"
