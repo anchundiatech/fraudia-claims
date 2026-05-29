@@ -515,13 +515,6 @@ function ChatAgente({ fullScreen = false }: { fullScreen?: boolean }) {
           </span>
         )}
       </div>
-          <Bot size={20} className="text-[#4f46e5]" />
-          <p className="text-sm font-bold text-slate-800">Audit IA — Consultor Analítico</p>
-        </div>
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-green-50 text-green-700 border border-green-200/50">
-          <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" /> Activo
-        </span>
-      </div>
 
       <div className="flex-1 overflow-y-auto p-5 space-y-4 text-sm scrollbar-thin">
         {messages.map((m, i) => (
