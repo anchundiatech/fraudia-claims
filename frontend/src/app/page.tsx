@@ -488,7 +488,7 @@ function ChatAgente({ fullScreen = false }: { fullScreen?: boolean }) {
           <div className="flex justify-start">
             <div className="bg-slate-50 border border-slate-100 text-slate-500 rounded-2xl rounded-tl-none px-4 py-3 text-xs flex items-center gap-2 shadow-sm">
               <Bot size={16} className="text-[#4f46e5] animate-spin" />
-              <span className="font-semibold animate-pulse">Audit IA está analizando los siniestros...</span>
+              <span className="font-semibold animate-pulse">Audit IA está pensado...</span>
             </div>
           </div>
         )}
@@ -826,12 +826,12 @@ export default function Dashboard() {
             </div>
           )}
 
-          {/* TAB: AGENTE LUCHO (Full Screen Chat) */}
+          {/* TAB: AGENTE AUDIT (Full Screen Chat) */}
           {activeTab === "agent" && (
             <div className="space-y-4 max-w-4xl mx-auto animate-fade-in">
               <div>
                 <h2 className="text-xl font-extrabold text-slate-900 tracking-tight">Audit IA — Chat Conversacional</h2>
-                <p className="text-xs text-slate-400 mt-1 font-bold">Realiza consultas analíticas avanzadas utilizando lenguaje natural con el Agente Lucho</p>
+                <p className="text-xs text-slate-400 mt-1 font-bold">Realiza consultas analíticas avanzadas utilizando lenguaje natural con el Agente Audit</p>
               </div>
               <ChatAgente fullScreen={true} />
             </div>
