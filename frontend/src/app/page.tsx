@@ -311,7 +311,7 @@ function DetalleSiniestro({
               </h3>
               <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
                 {detalle.senales.map((s, i) => (
-                  <div key={i} className="flex items-center justify-between text-xs bg-gray-50 hover:bg-gray-100 transition-colors rounded-xl px-4 py-3 border border-gray-200/60 shadow-xs">
+                  <div key={i} className="flex items-center justify-between text-xs bg-gray-50 hover:bg-gray-100 transition-colors rounded-xl px-4 py-3 border border-gray-200/60 shadow-sm">
                     <span className="text-gray-700 font-medium leading-relaxed pr-3">{s.senial}</span>
                     <span className="font-bold text-red-600 shrink-0 bg-red-50 px-2 py-1 rounded-lg">+{s.puntaje} pts</span>
                   </div>
@@ -335,13 +335,13 @@ function DetalleSiniestro({
                 {detalle.alertas.map((a, i) => {
                   const estilos = nivelAlerta(a.nivel);
                   return (
-                    <div key={i} className={`rounded-xl border p-4 shadow-xs ${estilos.bg} border-gray-200/50`}>
+                    <div key={i} className={`rounded-xl border p-4 shadow-sm ${estilos.bg} border-gray-200/50`}>
                       <div className="flex items-start gap-3">
                         <span className="text-base mt-0.5 shrink-0">{estilos.icon}</span>
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center justify-between gap-2">
                             <span className={`text-xs font-extrabold uppercase tracking-wide ${estilos.text}`}>{a.codigo}</span>
-                            <span className={`text-xs font-bold bg-white px-2 py-0.5 rounded-lg border border-gray-100 shadow-2xs ${estilos.text}`}>+{a.puntos} pts</span>
+                            <span className={`text-xs font-bold bg-white px-2 py-0.5 rounded-lg border border-gray-100 shadow-sm ${estilos.text}`}>+{a.puntos} pts</span>
                           </div>
                           <p className="text-xs text-gray-700 mt-1.5 leading-relaxed font-medium">{a.descripcion}</p>
                         </div>
@@ -355,7 +355,7 @@ function DetalleSiniestro({
 
           {/* Resumen IA */}
           {d.resumen_ia && (
-            <div className={`rounded-2xl border p-5 shadow-xs ${
+            <div className={`rounded-2xl border p-5 shadow-sm ${
               d.nivel_riesgo === "ROJO" ? "bg-red-50/50 border-red-200/60" :
               d.nivel_riesgo === "AMARILLO" ? "bg-yellow-50/50 border-yellow-200/60" :
               "bg-green-50/50 border-green-200/60"
@@ -486,7 +486,7 @@ function ChatAgente({ fullScreen = false }: { fullScreen?: boolean }) {
         ))}
         {loading && (
           <div className="flex justify-start">
-            <div className="bg-gray-50 border border-gray-100 text-gray-500 rounded-2xl rounded-tl-none px-4 py-3 text-xs flex items-center gap-2 shadow-xs">
+            <div className="bg-gray-50 border border-gray-100 text-gray-500 rounded-2xl rounded-tl-none px-4 py-3 text-xs flex items-center gap-2 shadow-sm">
               <Bot size={16} className="text-[#3b59ca] animate-spin" />
               <span className="font-semibold animate-pulse">Audit IA está analizando los siniestros...</span>
             </div>
@@ -571,7 +571,7 @@ export default function Dashboard() {
     <div className="min-h-screen bg-[#f4f6fa] flex flex-col font-sans antialiased text-[#1c2434]">
       
       {/* HEADER EXACT TO SCREENSHOT */}
-      <header className="bg-white border-b border-gray-200/80 px-6 py-3.5 flex items-center justify-between sticky top-0 z-30 shadow-xs">
+      <header className="bg-white border-b border-gray-200/80 px-6 py-3.5 flex items-center justify-between sticky top-0 z-30 shadow-sm">
         <div className="flex items-center gap-3.5">
           <div className="bg-[#eff2fc] p-2.5 rounded-xl border border-gray-100 flex items-center justify-center">
             <Shield className="text-[#3b59ca]" size={22} />
@@ -583,10 +583,10 @@ export default function Dashboard() {
         </div>
 
         <div className="flex items-center gap-4">
-          <button className="bg-white border border-gray-200 text-gray-500 hover:text-gray-800 p-2 rounded-xl shadow-2xs hover:bg-gray-50 transition-all">
+          <button className="bg-white border border-gray-200 text-gray-500 hover:text-gray-800 p-2 rounded-xl shadow-sm hover:bg-gray-50 transition-all">
             <Bell size={18} />
           </button>
-          <button className="bg-white border border-gray-200 text-gray-500 hover:text-gray-800 p-2 rounded-xl shadow-2xs hover:bg-gray-50 transition-all">
+          <button className="bg-white border border-gray-200 text-gray-500 hover:text-gray-800 p-2 rounded-xl shadow-sm hover:bg-gray-50 transition-all">
             <HelpCircle size={18} />
           </button>
           
@@ -605,8 +605,8 @@ export default function Dashboard() {
       <div className="flex flex-1 max-w-full">
         
         {/* SIDEBAR EXACT TO SCREENSHOT */}
-        <aside className="w-68 p-5 flex flex-col shrink-0 sticky top-[73px] h-[calc(100vh-73px)] overflow-y-auto">
-          <div className="bg-white rounded-2xl border border-gray-200/80 p-4 shadow-xs flex-1 flex flex-col justify-between">
+        <aside className="w-72 p-5 flex flex-col shrink-0 sticky top-[73px] h-[calc(100vh-73px)] overflow-y-auto">
+          <div className="bg-white rounded-2xl border border-gray-200/80 p-4 shadow-sm flex-1 flex flex-col justify-between">
             <nav className="space-y-1.5">
               {menuItems.map((item) => {
                 const Icon = item.icon;
@@ -871,7 +871,7 @@ export default function Dashboard() {
               </div>
 
               {error && (
-                <div className="bg-red-50 border border-red-200 text-red-700 rounded-2xl px-5 py-4 text-xs font-semibold shadow-xs">
+                <div className="bg-red-50 border border-red-200 text-red-700 rounded-2xl px-5 py-4 text-xs font-semibold shadow-sm">
                   {error}
                 </div>
               )}
@@ -930,14 +930,14 @@ export default function Dashboard() {
                         <button
                           onClick={() => setOffset((o) => Math.max(0, o - PAGE_SIZE))}
                           disabled={offset === 0}
-                          className="text-xs font-bold px-4 py-2 rounded-xl border border-gray-200 bg-white text-gray-500 hover:border-gray-400 hover:text-gray-800 disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-2xs"
+                          className="text-xs font-bold px-4 py-2 rounded-xl border border-gray-200 bg-white text-gray-500 hover:border-gray-400 hover:text-gray-800 disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-sm"
                         >
                           <ChevronLeft size={16} className="inline mr-1" /> Anterior
                         </button>
                         <button
                           onClick={() => setOffset((o) => o + PAGE_SIZE)}
                           disabled={offset + PAGE_SIZE >= total}
-                          className="text-xs font-bold px-4 py-2 rounded-xl border border-gray-200 bg-white text-gray-500 hover:border-gray-400 hover:text-gray-800 disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-2xs"
+                          className="text-xs font-bold px-4 py-2 rounded-xl border border-gray-200 bg-white text-gray-500 hover:border-gray-400 hover:text-gray-800 disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-sm"
                         >
                           Siguiente <ChevronRight size={16} className="inline ml-1" />
                         </button>
@@ -955,7 +955,7 @@ export default function Dashboard() {
       <div className="fixed bottom-6 right-6 z-40">
         <button
           onClick={() => setFloatingChatOpen(!floatingChatOpen)}
-          className="bg-gradient-to-tr from-[#3b59ca] to-indigo-600 text-white rounded-full p-4.5 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110 flex items-center justify-center border border-white/20 animate-bounce-slow"
+          className="bg-gradient-to-tr from-[#3b59ca] to-indigo-600 text-white rounded-full p-5 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110 flex items-center justify-center border border-white/20 animate-bounce-slow"
         >
           {floatingChatOpen ? <X size={24} /> : <Sparkles size={24} />}
         </button>
