@@ -110,6 +110,7 @@ La activación de cualquiera de las siguientes condiciones fuerza el score del c
 
 *   Python 3.12+ instalado.
 *   Node.js 18+ y `pnpm` o `npm` instalado.
+*   Una cuenta y un proyecto creado en **Supabase** (para el almacenamiento de los datos) y/o tu API Key de tu proveedor de IA de preferencia (**xAI (Grok)**, **Gemini** o **Anthropic (Claude)**).
 
 ### 2. Clonar el repositorio
 
@@ -120,31 +121,53 @@ cd fraudia-claims
 
 ### 3. Servidor Backend (FastAPI)
 
-1. Dirígete a la carpeta raíz o de backend:
+Sigue estos pasos detallados desde la raíz del proyecto para inicializar el entorno, configurar la base de datos y arrancar la API local:
+
+#### Paso 3.1: Entorno Virtual y Dependencias
+1. Crea y activa tu entorno virtual de Python:
    ```bash
    python -m venv venv
-   # En Windows:
+   # En Windows (Git Bash):
+   source venv/Scripts/activate
+   # En Windows (cmd.exe):
    venv\Scripts\activate
    # En macOS/Linux:
    source venv/bin/activate
    ```
-2. Instala las dependencias del proyecto:
+2. Instala las dependencias necesarias:
    ```bash
    pip install -r requirements.txt
    ```
-3. Configura tus variables de entorno creando un archivo `.env` basado en `.env.example`:
+
+#### Paso 3.2: Variables de Entorno (.env)
+1. Copia la plantilla de variables de entorno a tu archivo local:
    ```bash
    cp .env.example .env
    ```
-   Agrega tu `ANTHROPIC_API_KEY` para activar el Agente Audit IA.
-4. Ejecuta el servidor de desarrollo:
+2. Abre el archivo `.env` en tu editor y configura tus claves:
+   *   **Para el Agente de IA**: Define `AI_PROVIDER` (`xai`, `gemini` o `anthropic`) y agrega su respectiva API key (`XAI_API_KEY`, `GEMINI_API_KEY` o `ANTHROPIC_API_KEY`).
+   *   **Para la Base de Datos (Supabase)**: Agrega tus claves de conexión de Supabase en `SUPABASE_URL` y `SUPABASE_KEY` (puedes obtenerlas en el panel de configuración de tu proyecto de Supabase en API -> Project API Keys).
+
+#### Paso 3.3: Sembrado de Datos (Seeding a Supabase)
+> **CRÍTICO:** Es obligatorio cargar tus datos en tu instancia de Supabase antes de iniciar el servidor por primera vez para que las tablas de siniestros, pólizas, documentos y clasificaciones se creen y se pueblen con los datos sintéticos.
+
+1. Ejecuta el script de carga desde la raíz del proyecto:
+   ```bash
+   python src/database/cargar_datos.py
+   ```
+   *Este script leerá automáticamente el dataset sintético localizado en `data/synthetic/siniestros.csv` y lo subirá a las tablas correspondientes en tu nube de Supabase.*
+
+#### Paso 3.4: Iniciar el Servidor API
+1. Arranca el servidor FastAPI de desarrollo:
    ```bash
    uvicorn src.app.main:app --reload --port 8000
    ```
-   *   API Local: `http://localhost:8000`
-   *   Swagger UI (Documentación interactiva): `http://localhost:8000/docs`
+   *   API Local activa en: `http://localhost:8000`
+   *   Swagger UI (Documentación interactiva y pruebas de endpoints): `http://localhost:8000/docs`
 
 ### 4. Cliente Frontend (Next.js)
+
+Abre otra terminal diferente y ejecuta los siguientes comandos para iniciar la interfaz gráfica del Dashboard:
 
 1. Dirígete a la carpeta `frontend`:
    ```bash
@@ -160,13 +183,13 @@ cd fraudia-claims
    ```bash
    cp .env.local.example .env.local
    ```
-4. Ejecuta el servidor Next.js:
+4. Ejecuta el servidor Next.js en modo de desarrollo:
    ```bash
    pnpm run dev
    # O si usas npm:
    npm run dev
    ```
-   *   Dashboard: `http://localhost:3000`
+   *   Dashboard del analista activo en: `http://localhost:3000`
 
 ---
 
