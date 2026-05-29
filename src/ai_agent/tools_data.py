@@ -305,6 +305,9 @@ def alertas_desde_senales(row: pd.Series) -> list[dict]:
         }]
 
     nivel = row.get("nivel_riesgo", "VERDE")
+    if nivel == "VERDE":
+        return []
+
     score = int(row.get("score", 0))
     puntaje = row.get("puntaje_total")
     if puntaje is not None and not (isinstance(puntaje, float) and pd.isna(puntaje)):
@@ -314,8 +317,6 @@ def alertas_desde_senales(row: pd.Series) -> list[dict]:
             "puntos": int(round(float(puntaje))),
             "nivel": nivel,
         }]
-    if nivel == "VERDE":
-        return []
     return [{
         "codigo": "SCORE",
         "descripcion": f"Score {score}/100 — {nivel}",
