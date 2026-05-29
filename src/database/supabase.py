@@ -19,7 +19,7 @@ def get_client() -> Optional[Client]:
 
 
 def get_table_name() -> str:
-    """Vista principal: vPoliza_Puntaje_Total o vPoliza_Asegurado."""
+    """Vista principal: vPoliza_Puntaje_Total """
     return os.getenv("DB_TABLE_SINIESTROS", "vPoliza_Puntaje_Total")
 
 
