@@ -332,7 +332,7 @@ function ChatAgente() {
   return (
     <div className="bg-white rounded-xl border border-gray-200 flex flex-col h-96">
       <div className="px-4 py-3 border-b border-gray-100">
-        <p className="text-sm font-semibold text-gray-800">🤖 Agente de análisis</p>
+        <p className="text-sm font-semibold text-gray-800">🤖 Audit IA</p>
       </div>
       <div className="flex-1 overflow-y-auto p-4 space-y-3 text-sm">
         {messages.map((m, i) => (
