@@ -17,6 +17,8 @@ sentence-transformers==2.7.0
 # IA Agent
 openai==1.70.0
 anthropic
+google-genai
+
 
 
 # Base de datos (opcional, para persistencia)
