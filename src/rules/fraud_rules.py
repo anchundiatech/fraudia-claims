@@ -53,7 +53,6 @@ class MotorReglasFraude:
     def evaluar(self, siniestro: dict) -> ResultadoScore:
         alertas: list[Alerta] = []
         puntos_total = 0
-            fraudia-claims
         # ── SEÑAL 1: Reclamo cercano al borde de vigencia ─────────────────
         dias_inicio = siniestro.get("dias_desde_inicio_poliza", 9999)
         if dias_inicio <= 10:
@@ -192,7 +191,7 @@ class MotorReglasFraude:
             alertas.append(a)
 
         # ── Normalizar score a 0–100 ───────────────────────────────────────
-        MAX_PUNTOS_POSIBLES = 100
+        MAX_PUNTOS_POSIBLES = 50
         score = min(int((puntos_total / MAX_PUNTOS_POSIBLES) * 100), 100)
 
         # Si hay una regla ROJO crítica, score mínimo 76
