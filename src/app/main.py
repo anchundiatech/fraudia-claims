@@ -86,6 +86,34 @@ class ChatRequest(BaseModel):
     pregunta: str
 
 
+class ConfigAgenteRequest(BaseModel):
+    provider: str
+    model: Optional[str] = None
+
+
+@app.post("/chat/config")
+def configurar_agente(req: ConfigAgenteRequest):
+    try:
+        from ai_agent.agent import actualizar_config_agente, AgenteFraude
+        actualizar_config_agente(req.provider, req.model)
+        agente = AgenteFraude()
+        
+        modelo_activo = agente.gemini_model
+        if agente.provider == "xai":
+            modelo_activo = agente.xai_model
+        elif agente.provider == "anthropic":
+            modelo_activo = agente.anthropic_model
+            
+        return {
+            "status": "ok",
+            "provider": agente.provider,
+            "model": modelo_activo,
+            "mensaje": f"Configuración del agente actualizada a {agente.provider} ({modelo_activo})"
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @app.get("/")
 def root():
     return {"mensaje": "Fraudia Claims API activa", "docs": "/docs"}

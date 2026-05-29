@@ -1,26 +1,46 @@
 import os
 import json
+from typing import Optional
 from openai import OpenAI
 from .tools import ejecutar_tool, OPENAI_TOOLS, TOOLS_DEFINICION, ANTHROPIC_TOOLS
 from .prompts import SYSTEM_PROMPT
 
+# Configuración global en memoria para persistir la selección del usuario desde el frontend
+_CURRENT_PROVIDER: Optional[str] = None
+_CURRENT_XAI_MODEL: Optional[str] = None
+_CURRENT_GEMINI_MODEL: Optional[str] = None
+_CURRENT_ANTHROPIC_MODEL: Optional[str] = None
+
+def actualizar_config_agente(provider: str, model: Optional[str] = None):
+    global _CURRENT_PROVIDER, _CURRENT_XAI_MODEL, _CURRENT_GEMINI_MODEL, _CURRENT_ANTHROPIC_MODEL
+    _CURRENT_PROVIDER = provider.lower()
+    if model:
+        if _CURRENT_PROVIDER == "xai":
+            _CURRENT_XAI_MODEL = model
+        elif _CURRENT_PROVIDER == "gemini":
+            _CURRENT_GEMINI_MODEL = model
+        elif _CURRENT_PROVIDER == "anthropic":
+            _CURRENT_ANTHROPIC_MODEL = model
+
 class AgenteFraude:
     def __init__(self):
-        self.provider = os.getenv("AI_PROVIDER", "xai").lower()
+        global _CURRENT_PROVIDER, _CURRENT_XAI_MODEL, _CURRENT_GEMINI_MODEL, _CURRENT_ANTHROPIC_MODEL
+        
+        self.provider = _CURRENT_PROVIDER if _CURRENT_PROVIDER is not None else os.getenv("AI_PROVIDER", "xai").lower()
         self.system_prompt = SYSTEM_PROMPT
 
         # xAI Config
         self.xai_api_key = os.getenv("XAI_API_KEY")
-        self.xai_model = os.getenv("XAI_MODEL", "grok-beta")
+        self.xai_model = _CURRENT_XAI_MODEL if _CURRENT_XAI_MODEL is not None else os.getenv("XAI_MODEL", "grok-beta")
         self.xai_base_url = os.getenv("XAI_BASE_URL", "https://api.x.ai/v1")
 
         # Gemini Config
         self.gemini_api_key = os.getenv("GEMINI_API_KEY")
-        self.gemini_model = "gemini-1.5-flash"
+        self.gemini_model = _CURRENT_GEMINI_MODEL if _CURRENT_GEMINI_MODEL is not None else "gemini-1.5-flash"
 
         # Anthropic Config
         self.anthropic_api_key = os.getenv("ANTHROPIC_API_KEY")
-        self.anthropic_model = os.getenv("ANTHROPIC_MODEL", "claude-3-5-sonnet-20241022")
+        self.anthropic_model = _CURRENT_ANTHROPIC_MODEL if _CURRENT_ANTHROPIC_MODEL is not None else os.getenv("ANTHROPIC_MODEL", "claude-3-5-sonnet-20241022")
 
     def consultar(self, pregunta: str) -> str:
         if self.provider == "xai":

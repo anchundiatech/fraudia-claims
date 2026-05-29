@@ -109,6 +109,30 @@ export async function chatAgente(pregunta: string): Promise<string> {
   return data.respuesta;
 }
 
+export interface AgentConfig {
+  status: string;
+  provider: string;
+  model: string;
+  modelo?: string;
+  proveedor?: string;
+}
+
+export async function getAgentStatus(): Promise<AgentConfig> {
+  const res = await fetch(`${API_URL}/chat/status`);
+  if (!res.ok) throw new Error("Error al obtener estado del agente");
+  return res.json();
+}
+
+export async function updateAgentConfig(provider: string, model?: string): Promise<AgentConfig> {
+  const res = await fetch(`${API_URL}/chat/config`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ provider, model }),
+  });
+  if (!res.ok) throw new Error("Error al actualizar configuración");
+  return res.json();
+}
+
 export function getNivelColor(nivel: string) {
   switch (nivel) {
     case "ROJO":     return { bg: "bg-red-100",    text: "text-red-800",    badge: "🔴" };
