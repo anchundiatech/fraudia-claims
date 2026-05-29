@@ -110,3 +110,14 @@ OPENAI_TOOLS = [
         }
     }
 ]
+
+# FORMATO ANTHROPIC COMPATIBLE (Generado dinámicamente)
+ANTHROPIC_TOOLS = [
+    {
+        "name": tool["function"]["name"],
+        "description": tool["function"]["description"],
+        "input_schema": tool["function"]["parameters"]
+    }
+    for tool in OPENAI_TOOLS
+]
+
