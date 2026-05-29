@@ -564,7 +564,7 @@ export default function Dashboard() {
     { id: "beneficiario", name: "Beneficiario", icon: Users },
     { id: "poliza", name: "Póliza", icon: FileText },
     { id: "siniestro", name: "Siniestro", icon: AlertTriangle, badge: total > 0 ? total : undefined },
-    { id: "agent", name: "Agente Lucho", icon: Bot },
+    { id: "agent", name: "Agente Audit", icon: Bot },
   ];
 
   return (
