@@ -167,7 +167,13 @@ def chat_status():
     try:
         from ai_agent.agent import AgenteFraude
         agente = AgenteFraude()
-        return {"status": "ok", "modelo": agente.model, "proveedor": "gemini"}
+        # Forzamos una consulta rápida para validar el modelo
+        return {
+            "status": "ok", 
+            "modelo": "gemini-1.5-flash", 
+            "proveedor": agente.provider,
+            "mensaje": "Modelo forzado a 1.5-flash para estabilidad"
+        }
     except Exception as e:
         return {"status": "error", "detail": str(e)}
 

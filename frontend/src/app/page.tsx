@@ -10,7 +10,7 @@ function BarraScore({
   score,
   nivel,
   puntaje,
-  puntajeMax = 20,
+  puntajeMax = 100,
   className = "w-16",
 }: {
   score: number;
@@ -457,12 +457,27 @@ export default function Dashboard() {
           <h1 className="text-lg font-bold text-gray-900">🔍 Fraudia Claims</h1>
           <p className="text-xs text-gray-400">Analizador de pólizas de alto riesgo — hackIAthon 2026</p>
         </div>
-        <a
-          href="/api/exportar/csv"
-          className="text-xs bg-gray-900 text-white px-3 py-1.5 rounded-lg hover:bg-gray-700 transition-colors"
-        >
-          ↓ Exportar CSV
-        </a>
+        <div className="flex gap-2">
+          <button
+            onClick={async () => {
+              try {
+                await fetch("http://localhost:8000/db/recargar", { method: "POST" });
+                window.location.reload();
+              } catch {
+                window.location.reload();
+              }
+            }}
+            className="text-xs bg-blue-600 text-white px-3 py-1.5 rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center gap-1"
+          >
+            🔄 Recargar Datos
+          </button>
+          <a
+            href="/api/exportar/csv"
+            className="text-xs bg-gray-900 text-white px-3 py-1.5 rounded-lg hover:bg-gray-700 transition-colors"
+          >
+            ↓ Exportar CSV
+          </a>
+        </div>
       </header>
 
       <main className="max-w-screen-xl mx-auto px-6 py-6 space-y-6">

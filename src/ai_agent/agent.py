@@ -1,97 +1,121 @@
-"""
-agent.py — Motor del agente de IA con tool calling para Fraudia Claims.
-"""
-
-import json
 import os
-from google import genai
-from google.genai import types
-
+import json
+from openai import OpenAI
+from .tools import ejecutar_tool, OPENAI_TOOLS, TOOLS_DEFINICION
 from .prompts import SYSTEM_PROMPT
-from .tools import TOOLS_DEFINICION, ejecutar_tool
-
 
 class AgenteFraude:
-    """Agente con function calling para consultar siniestros y responder en lenguaje natural."""
-
-    MAX_ITERACIONES = 8
-
     def __init__(self):
-        api_key = os.getenv("GEMINI_API_KEY")
-        base_url = os.getenv(
-            "GEMINI_BASE_URL",
-            "https://generativelanguage.googleapis.com/v1beta"  # ✅ versión correcta
-        )
-        self.model = os.getenv("GEMINI_MODEL", "gemini-2.0-flash")  # ✅ modelo válido
+        self.provider = os.getenv("AI_PROVIDER", "gemini").lower()
+        self.system_prompt = SYSTEM_PROMPT
 
-        if not api_key:
-            raise ValueError("GEMINI_API_KEY no configurada en .env")
+        # xAI Config
+        self.xai_api_key = os.getenv("XAI_API_KEY")
+        self.xai_model = os.getenv("XAI_MODEL", "grok-beta")
+        self.xai_base_url = os.getenv("XAI_BASE_URL", "https://api.x.ai/v1")
 
-        # ✅ Cliente inicializado correctamente
-        self.client = genai.Client(
-            api_key=api_key,
-            http_options=types.HttpOptions(base_url=base_url)
-        )
+        # Gemini Config
+        self.gemini_api_key = os.getenv("GEMINI_API_KEY")
+        self.gemini_model = "gemini-1.5-flash"
 
     def consultar(self, pregunta: str) -> str:
-        # ✅ Historial en formato Gemini (solo roles "user" y "model")
-        historial: list[types.Content] = []
+        if self.provider == "xai":
+            return self._consultar_xai(pregunta)
+        else:
+            return self._consultar_gemini(pregunta)
 
-        # El system prompt va aparte en la config, no en el historial
-        config = types.GenerateContentConfig(
-            system_instruction=SYSTEM_PROMPT,
-            max_output_tokens=2000,
-            temperature=0.3,
-            tools=TOOLS_DEFINICION,
-        )
+    def _consultar_xai(self, pregunta: str) -> str:
+        if not self.xai_api_key:
+            return "Falta configurar XAI_API_KEY en el archivo .env"
 
-        # Mensaje inicial del usuario
-        historial.append(types.Content(
-            role="user",
-            parts=[types.Part(text=pregunta)]
-        ))
+        client = OpenAI(api_key=self.xai_api_key, base_url=self.xai_base_url)
+        
+        mensajes = [
+            {"role": "system", "content": self.system_prompt},
+            {"role": "user", "content": pregunta}
+        ]
 
-        for _ in range(self.MAX_ITERACIONES):
-            response = self.client.models.generate_content(
-                model=self.model,
-                contents=historial,
-                config=config,
+        try:
+            # Llamamos a Grok con las herramientas habilitadas en formato OpenAI
+            response = client.chat.completions.create(
+                model=self.xai_model,
+                messages=mensajes,
+                tools=OPENAI_TOOLS,
+                tool_choice="auto",
+                temperature=0.1
             )
 
-            candidate = response.candidates[0]
-            content = candidate.content
+            response_message = response.choices[0].message
+            tool_calls = response_message.tool_calls
 
-            # Agregar respuesta del modelo al historial
-            historial.append(content)
+            # Si el modelo decide llamar a una herramienta
+            if tool_calls:
+                mensajes.append(response_message)
+                for tool_call in tool_calls:
+                    nombre_func = tool_call.function.name
+                    args = json.loads(tool_call.function.arguments)
+                    
+                    # EJECUCIÓN EN LA DB REAL (vPoliza_Puntaje_Total)
+                    resultado_db = ejecutar_tool(nombre_func, args)
+                    
+                    mensajes.append({
+                        "tool_call_id": tool_call.id,
+                        "role": "tool",
+                        "name": nombre_func,
+                        "content": resultado_db
+                    })
 
-            # Verificar si hay function calls
-            function_calls = [
-                part for part in content.parts
-                if part.function_call is not None
-            ]
+                # Volvemos a llamar a Grok para que resuma el resultado de la DB
+                segunda_respuesta = client.chat.completions.create(
+                    model=self.xai_model,
+                    messages=mensajes,
+                    temperature=0.1
+                )
+                return segunda_respuesta.choices[0].message.content
 
-            if function_calls:
-                # Ejecutar cada tool y agregar resultados
+            return response_message.content
+
+        except Exception as e:
+            return f"Error en el agente xAI: {str(e)}"
+
+    def _consultar_gemini(self, pregunta: str) -> str:
+        if not self.gemini_api_key:
+            return "Falta configurar GEMINI_API_KEY en el archivo .env"
+
+        from google import genai
+        from google.genai import types
+
+        client = genai.Client(
+            api_key=self.gemini_api_key,
+            http_options=types.HttpOptions(api_version="v1")
+        )
+
+        config = {
+            "system_instruction": self.system_prompt,
+            "tools": [TOOLS_DEFINICION],
+            "temperature": 0.1,
+        }
+
+        chat = client.chats.create(model=self.gemini_model, config=config)
+        
+        try:
+            response = chat.send_message(pregunta)
+            for _ in range(8):
+                if not response.candidates[0].content.parts or not any(p.function_call for p in response.candidates[0].content.parts):
+                    return response.text
+
                 tool_results = []
-                for part in function_calls:
-                    fc = part.function_call
-                    func_args = dict(fc.args) if fc.args else {}
-                    resultado = ejecutar_tool(fc.name, func_args)
-                    tool_results.append(
-                        types.Part(
-                            function_response=types.FunctionResponse(
+                for part in response.candidates[0].content.parts:
+                    if part.function_call:
+                        fc = part.function_call
+                        resultado = ejecutar_tool(fc.name, dict(fc.args) if fc.args else {})
+                        tool_results.append(
+                            types.Part.from_function_response(
                                 name=fc.name,
-                                response={"result": resultado},
+                                response={"result": resultado}
                             )
                         )
-                    )
-
-                # ✅ Los resultados de tools van con role "user" en Gemini
-                historial.append(types.Content(role="user", parts=tool_results))
-                continue
-
-            # Respuesta final de texto
-            if candidate.finish_reason == types.FinishReason.STOP:
-                return response.text
-
-        return "No pude generar una respuesta completa. Intenta reformular la pregunta."
+                response = chat.send_message(tool_results)
+            return response.text
+        except Exception as e:
+            return f"Error en el agente Gemini: {str(e)}"
